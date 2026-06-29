@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRAISE Sublimación · Monitor Meta Ads</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --border: #e2e5eb;
+    --text: #1a1d23;
+    --muted: #6b7280;
+    --accent: #4f46e5;
+    --accent2: #0ea5e9;
+    --green: #16a34a;
+    --red: #dc2626;
+    --orange: #ea580c;
+    --yellow: #ca8a04;
+    --purple: #7c3aed;
+    --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); font-family: var(--font); color: var(--text); font-size: 14px; }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%);
+    color: white;
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .header-logo {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 800; letter-spacing: -1px;
+  }
+  .header-title h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+  .header-title p { font-size: 12px; color: rgba(255,255,255,0.65); margin-top: 2px; }
+  .header-meta { text-align: right; font-size: 12px; color: rgba(255,255,255,0.6); }
+  .header-meta strong { display: block; font-size: 13px; color: rgba(255,255,255,0.9); }
+
+  /* TABS */
+  .tabs { display: flex; gap: 2px; background: var(--border); padding: 3px; border-radius: 10px; width: fit-content; margin: 20px 28px 0; }
+  .tab { padding: 7px 18px; border-radius: 8px; border: none; background: transparent; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .tab.active { background: white; color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* MAIN */
+  .main { padding: 20px 28px 32px; }
+
+  /* KPI CARDS */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  .kpi-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 18px 20px; position: relative; overflow: hidden;
+  }
+  .kpi-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--accent-color, var(--accent));
+  }
+  .kpi-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi-value { font-size: 26px; font-weight: 800; color: var(--text); margin: 6px 0 2px; line-height: 1; }
+  .kpi-sub { font-size: 12px; color: var(--muted); }
+  .kpi-icon { position: absolute; right: 16px; top: 16px; font-size: 24px; opacity: 0.12; }
+
+  /* GRID 2COL */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  /* CARD */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .card-header { padding: 16px 20px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-size: 13px; font-weight: 700; color: var(--text); }
+  .card-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .card-body { padding: 16px 20px; }
+  .chart-wrap { height: 220px; position: relative; }
+  .chart-wrap-lg { height: 260px; position: relative; }
+
+  /* TABLES */
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 10px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8f9ff; }
+  .adset-name { font-weight: 500; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* STATUS BADGES */
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-active { background: #dcfce7; color: #15803d; }
+  .badge-paused { background: #fee2e2; color: #b91c1c; }
+  .badge-scaling { background: #fef3c7; color: #b45309; }
+  .badge-underperform { background: #fce7f3; color: #9d174d; }
+  .badge-testing { background: #ede9fe; color: #6d28d9; }
+
+  /* BAR MINI */
+  .bar-mini { height: 6px; border-radius: 99px; background: #e5e7eb; overflow: hidden; margin-top: 4px; }
+  .bar-mini-fill { height: 100%; border-radius: 99px; }
+
+  /* CPR COLOR */
+  .cpr-good { color: var(--green); font-weight: 700; }
+  .cpr-mid  { color: var(--yellow); font-weight: 700; }
+  .cpr-bad  { color: var(--red); font-weight: 700; }
+
+  /* ALERTS */
+  .alerts { display: flex; flex-direction: column; gap: 8px; }
+  .alert-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; font-size: 12.5px; }
+  .alert-warn { background: #fff7ed; border: 1px solid #fed7aa; }
+  .alert-good { background: #f0fdf4; border: 1px solid #bbf7d0; }
+  .alert-info { background: #eff6ff; border: 1px solid #bfdbfe; }
+  .alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .alert-text strong { display: block; font-weight: 600; margin-bottom: 2px; }
+  .alert-text span { color: var(--muted); }
+
+  /* TREND DOT */
+  .trend-up { color: var(--green); }
+  .trend-dn { color: var(--red); }
+
+  /* FILTER ROW */
+  .filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .filter-btn { padding: 5px 12px; border: 1px solid var(--border); border-radius: 20px; background: white; font-size: 12px; font-weight: 500; cursor: pointer; color: var(--muted); transition: all 0.15s; }
+  .filter-btn.on { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* CREATIVE SCORE */
+  .score-ring { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0; }
+  .score-a { background: #dcfce7; color: #15803d; }
+  .score-b { background: #dbeafe; color: #1d4ed8; }
+  .score-c { background: #fef3c7; color: #b45309; }
+  .score-d { background: #fee2e2; color: #b91c1c; }
+
+  /* MINI STAT ROW */
+  .mini-stats { display: flex; gap: 16px; }
+  .mini-stat { text-align: center; }
+  .mini-stat-val { font-size: 18px; font-weight: 800; }
+  .mini-stat-lbl { font-size: 11px; color: var(--muted); }
+
+  /* SECTION LABEL */
+  .section-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* SCROLL TABLE */
+  .scroll-table { overflow-x: auto; }
+  .scroll-table table { min-width: 580px; }
+
+  /* TOTALS ROW */
+  tfoot tr td { border-top: 2px solid var(--border); border-bottom: none; background: #f8f9ff; font-weight: 700; font-size: 12.5px; color: var(--text); padding: 10px 10px; }
+  tfoot .total-label { color: var(--accent); font-weight: 800; }
+
+  /* DIAG CARDS */
+  .diag-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; margin-bottom: 14px; }
+  .diag-card-header { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
+  .diag-card-icon { font-size: 26px; flex-shrink: 0; }
+  .diag-card-title { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.3; }
+  .diag-card-subtitle { font-size: 12px; color: var(--muted); margin-top: 3px; font-weight: 400; }
+  .diag-card-body { font-size: 13px; color: #374151; line-height: 1.65; }
+  .diag-card-body p { margin-bottom: 8px; }
+  .diag-card-body p:last-child { margin-bottom: 0; }
+  .diag-card-body strong { color: var(--text); }
+  .diag-analogy { background: #f0f4ff; border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 8px 12px; margin-top: 10px; font-size: 12.5px; color: #374151; font-style: italic; }
+  .diag-analogy::before { content: '💡 '; font-style: normal; }
+  .diag-action { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 8px 12px; margin-top: 10px; font-size: 12.5px; color: #15803d; }
+  .diag-action::before { content: '→ Acción: '; font-weight: 700; }
+  .diag-warn { border-left: 4px solid #dc2626; }
+  .diag-opp  { border-left: 4px solid #0ea5e9; }
+  .diag-good { border-left: 4px solid #16a34a; }
+  .diag-rec  { border-left: 4px solid var(--accent); }
+  .diag-section-title { font-size: 13px; font-weight: 800; color: var(--text); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .diag-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* CONNECTOR BANNER */
+  .connector-banner {
+    background: linear-gradient(135deg, #f0f4ff, #e8f4fd);
+    border: 1px solid #c7d7f7;
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+  .connector-banner-icon { font-size: 22px; }
+  .connector-banner p { color: #374151; }
+  .connector-banner strong { color: #1e3a8a; }
+  .conn-pill { display: inline-flex; align-items: center; gap: 4px; background: white; border: 1px solid #c7d7f7; border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #3730a3; margin: 2px; }
+  .conn-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; }
+
+  /* ── TABLET / LARGE MOBILE ── */
+  @media (max-width: 768px) {
+    .kpis { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; gap: 12px; }
+    .header { flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px 16px; }
+    .header-meta { text-align: left; }
+    .main { padding: 14px 16px 28px; }
+    .tabs { margin: 14px 16px 0; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab { padding: 7px 14px; font-size: 12px; flex-shrink: 0; display: inline-block; }
+    .card-body { padding: 12px 14px; }
+    .card-header { padding: 12px 14px 10px; }
+    .chart-wrap { height: 180px; }
+    .chart-wrap-lg { height: 220px; }
+    .kpi-card { padding: 14px 14px; }
+    .kpi-value { font-size: 22px; }
+    .kpi-icon { font-size: 20px; }
+    .connector-banner { flex-direction: column; gap: 8px; }
+    .diag-card { padding: 14px 14px; }
+    .section-label, .diag-section-title { font-size: 11px; }
+    .scroll-table { -webkit-overflow-scrolling: touch; }
+    .filter-row { gap: 6px; }
+    .filter-btn { padding: 5px 10px; font-size: 11px; }
+    .grid-2 { margin-bottom: 12px; }
+    .grid-3 { margin-bottom: 12px; }
+  }
+
+  /* ── IPHONE (375–430px) ── */
+  @media (max-width: 430px) {
+    html { font-size: 13px; }
+    .header-logo { width: 36px; height: 36px; font-size: 17px; }
+    .header-title h1 { font-size: 15px; }
+    .header-title p { font-size: 11px; }
+    .header-meta { font-size: 11px; }
+    .kpis { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    .kpi-card { padding: 12px 12px; border-radius: 11px; }
+    .kpi-label { font-size: 10px; }
+    .kpi-value { font-size: 19px; margin: 4px 0 1px; }
+    .kpi-sub { font-size: 10.5px; }
+    .kpi-icon { font-size: 18px; right: 10px; top: 10px; }
+    .main { padding: 12px 12px 28px; }
+    .card { border-radius: 11px; }
+    .card-header { padding: 12px 12px 9px; flex-direction: column; align-items: flex-start; gap: 4px; }
+    .card-title { font-size: 12.5px; }
+    .card-sub { font-size: 10.5px; }
+    .card-body { padding: 10px 12px; }
+    .chart-wrap { height: 160px; }
+    .chart-wrap-lg { height: 190px; }
+    .tabs { margin: 12px 12px 0; border-radius: 8px; }
+    .tab { padding: 6px 12px; font-size: 11.5px; }
+    table { font-size: 11.5px; }
+    th { font-size: 10px; padding: 7px 8px; }
+    td { padding: 8px 8px; }
+    .adset-name { max-width: 140px; font-size: 11px; }
+    .badge { font-size: 10px; padding: 2px 6px; }
+    .score-ring { width: 30px; height: 30px; font-size: 10px; }
+    .alert-item { padding: 9px 10px; }
+    .diag-card { padding: 12px 12px; border-radius: 11px; margin-bottom: 10px; }
+    .diag-card-icon { font-size: 22px; }
+    .diag-card-title { font-size: 13px; }
+    .diag-card-body { font-size: 12.5px; }
+    .diag-analogy { font-size: 11.5px; padding: 7px 10px; }
+    .diag-action { font-size: 11.5px; padding: 7px 10px; }
+    .connector-banner { padding: 12px 12px; font-size: 12px; border-radius: 10px; }
+    .conn-pill { font-size: 10.5px; padding: 3px 8px; }
+    .filter-btn { padding: 4px 9px; font-size: 11px; }
+    tfoot tr td { font-size: 11.5px; padding: 8px 8px; }
+    .section-label, .diag-section-title { font-size: 10.5px; margin-bottom: 8px; }
+    .mini-stats { gap: 10px; }
+    .mini-stat-val { font-size: 15px; }
+  }
+
+  /* ── IPHONE SE (320px) ── */
+  @media (max-width: 360px) {
+    .kpis { grid-template-columns: 1fr; }
+    .kpi-value { font-size: 22px; }
+    .header-title h1 { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">PS</div>
+    <div class="header-title">
+      <h1>PRAISE Sublimación Tuluá</h1>
+      <p>Monitor estratégico de campañas Meta Ads · Junio 2026</p>
+    </div>
+  </div>
+  <div class="header-meta">
+    <strong id="last-update">Datos: 1 – 28 Jun 2026</strong>
+    27 días · 26 conjuntos · 16 creativos
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('overview')">📊 Resumen</button>
+  <button class="tab" onclick="switchTab('adsets')">📦 Conjuntos</button>
+  <button class="tab" onclick="switchTab('creatives')">🎨 Creativos</button>
+  <button class="tab" onclick="switchTab('alerts')">⚡ Diagnóstico</button>
+</div>
+
+<div class="main">
+
+<!-- ══════════ TAB: RESUMEN ══════════ -->
+<div class="tab-panel active" id="tab-overview">
+
+  <!-- KPIs -->
+  <div class="kpis">
+    <div class="kpi-card" style="--accent-color:#4f46e5">
+      <div class="kpi-icon">💸</div>
+      <div class="kpi-label">Gasto Total</div>
+      <div class="kpi-value">$864K</div>
+      <div class="kpi-sub">COP · promedio $32K/día</div>
+    </div>
+    <div class="kpi-card" style="--accent-color:#0ea5e9">
+      <div class="kpi-icon">💬</div>
+      <div class="kpi-label">Conversaciones Wpp</div>
+      <div class="kpi-value">216</div>
+      <div class="kpi-sub">Mensajes iniciados · $3.998/conv</div>
+    </div>
+    <div class="kpi-card" style="--accent-color:#16a34a">
+      <div class="kpi-icon">👁</div>
+      <div class="kpi-label">Alcance Único</div>
+      <div class="kpi-value">129K</div>
+      <div class="kpi-sub">personas alcanzadas</div>
+    </div>
+    <div class="kpi-card" style="--accent-color:#ea580c">
+      <div class="kpi-icon">🎯</div>
+      <div class="kpi-label">Mejor CPR</div>
+      <div class="kpi-value">$848</div>
+      <div class="kpi-sub">COP · VTA PtId 0619</div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 1 -->
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Gasto diario vs. Conversaciones</div>
+          <div class="card-sub">Barras = COP invertido · Línea = resultados WhatsApp</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="chart-wrap-lg"><canvas id="chartDaily"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Distribución por estado</div></div>
+      <div class="card-body">
+        <div class="chart-wrap-lg"><canvas id="chartStatus"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 2 -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">CPR diario (Costo por resultado)</div>
+          <div class="card-sub">Meta recomendada: &lt; $3.000 COP</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="chart-wrap"><canvas id="chartCPR"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">CTR diario promedio (%)</div>
+          <div class="card-sub">Referencia saludable: &gt; 1%</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="chart-wrap"><canvas id="chartCTR"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════ TAB: CONJUNTOS ══════════ -->
+<div class="tab-panel" id="tab-adsets">
+  <div class="filter-row" style="margin-bottom:14px">
+    <span style="font-size:12px;font-weight:600;color:var(--muted)">Filtrar:</span>
+    <button class="filter-btn on" onclick="filterAdsets('all',this)">Todos</button>
+    <button class="filter-btn" onclick="filterAdsets('active',this)">🟢 Activos</button>
+    <button class="filter-btn" onclick="filterAdsets('scaling',this)">💥 Escalando</button>
+    <button class="filter-btn" onclick="filterAdsets('paused',this)">❌ Pausados</button>
+    <button class="filter-btn" onclick="filterAdsets('underperform',this)">🔴 Bajo rend.</button>
+    <button class="filter-btn" onclick="filterAdsets('testing',this)">🔥 Probando</button>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div class="card-title">Rendimiento por conjunto de anuncios</div>
+        <span style="background:#ede9fe;color:#6d28d9;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;">26 conjuntos testeados</span>
+      </div>
+      <div class="card-sub" style="margin-top:4px;">Ordenado por resultados · Haz clic en columnas para ordenar</div>
+    </div>
+    <div class="scroll-table">
+      <table id="adsetTable">
+        <thead>
+          <tr>
+            <th>Estado</th>
+            <th>Conjunto</th>
+            <th class="num">Gasto (COP)</th>
+            <th class="num">Resultados</th>
+            <th class="num">Alcance</th>
+            <th class="num">CPR prom.</th>
+            <th class="num">CTR %</th>
+            <th class="num">Conv %</th>
+            <th>Eficiencia</th>
+          </tr>
+        </thead>
+        <tbody id="adsetBody"></tbody>
+        <tfoot id="adsetFoot"></tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TAB: CREATIVOS ══════════ -->
+<div class="tab-panel" id="tab-creatives">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Ranking de creativos por eficiencia</div>
+        <div class="card-sub">Score A–D basado en CPR, resultados y CTR</div>
+      </div>
+    </div>
+    <div class="scroll-table">
+      <table id="adsTable">
+        <thead>
+          <tr>
+            <th>Score</th>
+            <th>Creativo</th>
+            <th class="num">Resultados</th>
+            <th class="num">Gasto (COP)</th>
+            <th class="num">Alcance</th>
+            <th class="num">CPR (COP)</th>
+            <th class="num">CTR %</th>
+            <th>Barra resultados</th>
+          </tr>
+        </thead>
+        <tbody id="adsBody"></tbody>
+        <tfoot id="adsFoot"></tfoot>
+      </table>
+    </div>
+  </div>
+  <div style="margin-top:16px">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Resultados por creativo (top 8)</div></div>
+      <div class="card-body">
+        <div class="chart-wrap-lg"><canvas id="chartAds"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TAB: DIAGNÓSTICO ══════════ -->
+<div class="tab-panel" id="tab-alerts">
+
+  <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#78350f;">
+    <strong>📋 ¿Cómo leer este diagnóstico?</strong> Este resumen está escrito para que cualquier persona, sin importar si conoce de publicidad digital o no, pueda entender qué está pasando con los anuncios, por qué importa y qué hacer al respecto. Cada punto incluye una comparación con situaciones del día a día para que sea más fácil de visualizar.
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="diag-section-title">🚨 Situaciones que necesitan atención</div>
+      <div id="alertsCritical"></div>
+      <div style="margin-top:20px" class="diag-section-title">🌟 Lo que está funcionando bien</div>
+      <div id="alertsGood"></div>
+    </div>
+    <div>
+      <div class="diag-section-title">💡 Oportunidades para crecer</div>
+      <div id="alertsOpp"></div>
+      <div style="margin-top:20px" class="diag-section-title">✅ Acciones recomendadas</div>
+      <div id="alertsRec"></div>
+    </div>
+  </div>
+
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ──────────── DATA ────────────
+const DATA = {
+  daily: [{"date":"2026-06-01","spend":15908,"results":8,"reach":2389,"msgs":8,"cpr":1777,"ctr":1.08},{"date":"2026-06-02","spend":17298,"results":2,"reach":1937,"msgs":2,"cpr":7989,"ctr":0.35},{"date":"2026-06-03","spend":13977,"results":7,"reach":2078,"msgs":7,"cpr":1806,"ctr":1.23},{"date":"2026-06-04","spend":9333,"results":2,"reach":1737,"msgs":2,"cpr":4472,"ctr":0.58},{"date":"2026-06-05","spend":27885,"results":5,"reach":6162,"msgs":5,"cpr":7115,"ctr":0.37},{"date":"2026-06-06","spend":31228,"results":8,"reach":4355,"msgs":8,"cpr":2622,"ctr":0.92},{"date":"2026-06-07","spend":43078,"results":8,"reach":6999,"msgs":8,"cpr":3268,"ctr":0.68},{"date":"2026-06-08","spend":27654,"results":4,"reach":3923,"msgs":4,"cpr":4610,"ctr":0.84},{"date":"2026-06-09","spend":58706,"results":10,"reach":6638,"msgs":10,"cpr":5598,"ctr":0.68},{"date":"2026-06-10","spend":68146,"results":16,"reach":8795,"msgs":16,"cpr":3511,"ctr":0.41},{"date":"2026-06-11","spend":45664,"results":10,"reach":6505,"msgs":10,"cpr":3887,"ctr":1.09},{"date":"2026-06-12","spend":34062,"results":8,"reach":5865,"msgs":8,"cpr":3867,"ctr":0.28},{"date":"2026-06-13","spend":33123,"results":5,"reach":5132,"msgs":5,"cpr":5764,"ctr":0.38},{"date":"2026-06-14","spend":32467,"results":3,"reach":4931,"msgs":3,"cpr":7951,"ctr":0.28},{"date":"2026-06-15","spend":20975,"results":0,"reach":2535,"msgs":0,"cpr":0,"ctr":0.29},{"date":"2026-06-16","spend":21334,"results":7,"reach":2462,"msgs":7,"cpr":2002,"ctr":1.09},{"date":"2026-06-17","spend":0,"results":1,"reach":0,"msgs":1,"cpr":0,"ctr":0},{"date":"2026-06-19","spend":31878,"results":7,"reach":3765,"msgs":7,"cpr":3603,"ctr":1.02},{"date":"2026-06-20","spend":43957,"results":12,"reach":6318,"msgs":12,"cpr":2238,"ctr":0.82},{"date":"2026-06-21","spend":30283,"results":12,"reach":5961,"msgs":12,"cpr":2363,"ctr":1.25},{"date":"2026-06-22","spend":38907,"results":6,"reach":5476,"msgs":6,"cpr":3984,"ctr":0.45},{"date":"2026-06-23","spend":45012,"results":10,"reach":6498,"msgs":10,"cpr":3724,"ctr":1.88},{"date":"2026-06-24","spend":38007,"results":19,"reach":5918,"msgs":19,"cpr":1844,"ctr":1.75},{"date":"2026-06-25","spend":31097,"results":17,"reach":4884,"msgs":17,"cpr":1197,"ctr":1.74},{"date":"2026-06-26","spend":39004,"results":10,"reach":6727,"msgs":10,"cpr":4245,"ctr":1.7},{"date":"2026-06-27","spend":35625,"results":15,"reach":6111,"msgs":15,"cpr":1672,"ctr":0.94},{"date":"2026-06-28","spend":29866,"results":4,"reach":5588,"msgs":4,"cpr":2925,"ctr":1.73}],
+  adsets: [{"name":"🟢 F2 | CBO | VTA-Wpp | TOFU | ADV INTERESES DIRECTOS","spend":154034,"results":33,"reach":27167,"cpr":5350,"ctr":0.28,"conv":52.4,"status":"active"},{"name":"🟢 F2  | CBO | VTA-Wpp |  TOFU | ADV LOOKA | TULUA","spend":122619,"results":27,"reach":22255,"cpr":5370,"ctr":0.26,"conv":41.5,"status":"active"},{"name":"🟢 F2 (2) | CBO | VTA-Wpp | TOFU | ADV INTERESES INDIRECTOS","spend":64496,"results":22,"reach":8846,"cpr":2734,"ctr":1.54,"conv":57.9,"status":"active"},{"name":"❌ F2 | CBO | VTA-Wpp |  TOFU | ADV BROAD","spend":52712,"results":18,"reach":7902,"cpr":4081,"ctr":0.48,"conv":38.8,"status":"paused"},{"name":"💥 F3 ⏫ | CBO | VTA-Wpp |  TOFU | ADV INTERESES DIRECTOS","spend":23255,"results":17,"reach":3237,"cpr":1348,"ctr":0.71,"conv":76.9,"status":"scaling"},{"name":"🟢 F2 (2) | CBO | VTA-Wpp | TOFU | ADV BROAD | TULUA","spend":78372,"results":16,"reach":13797,"cpr":3593,"ctr":1.64,"conv":26.4,"status":"active"},{"name":"💥F3 ⏫ | CBO | VTA-Wpp |  MOFU | ADV CUSTOM","spend":20701,"results":13,"reach":1557,"cpr":1614,"ctr":1.62,"conv":106.4,"status":"scaling"},{"name":"🟢F2-1 | CBO | VTA-Wpp | TOFU | ADV BROAD | TULUA","spend":33269,"results":9,"reach":4058,"cpr":3074,"ctr":1.42,"conv":47.6,"status":"active"},{"name":"🔴 F3 ⏫ | CBO | VTA-Wpp |  TOFU | ADV LOOKA | TULUA","spend":21080,"results":8,"reach":5147,"cpr":1896,"ctr":0.5,"conv":40.8,"status":"underperform"},{"name":"❌ F2 (2) | CBO | VTA-Wpp | TOFU | ADV BROAD | TULUA","spend":54716,"results":6,"reach":4896,"cpr":4983,"ctr":0.82,"conv":50.4,"status":"paused"},{"name":"🟢F2-1 | CBO | VTA-Wpp | TOFU | ADV INTERESES INDIRECTOS","spend":15237,"results":6,"reach":2404,"cpr":2395,"ctr":0.47,"conv":77.8,"status":"active"},{"name":"🟢 F2 (2) | CBO | VTA-Wpp | TOFU | ADV INTERESES new INDIRECTOS","spend":17999,"results":6,"reach":4001,"cpr":2566,"ctr":3.38,"conv":22.2,"status":"active"},{"name":"🟢 F2 | CBO | VTA-Wpp |  MOFU | ADV CUSTOM","spend":46111,"results":5,"reach":3006,"cpr":3472,"ctr":0.59,"conv":46.7,"status":"active"},{"name":"❌ F2 (2) | CBO | VTA-Wpp | TOFU | ADV LOOKA | TULUA","spend":29469,"results":5,"reach":3068,"cpr":2572,"ctr":0.54,"conv":83.3,"status":"paused"},{"name":"🟢 F2 (2) | CBO | VTA-Wpp | MOFU | ADV CUSTOM","spend":18449,"results":5,"reach":1926,"cpr":2547,"ctr":1.69,"conv":66.7,"status":"active"},{"name":"❌ F2 (2) | CBO | VTA-Wpp | TOFU | ADV INTERESES INDIRECTOS","spend":21058,"results":4,"reach":2069,"cpr":1088,"ctr":1.44,"conv":54.2,"status":"paused"},{"name":"🔴 F3 ⏫ | CBO | VTA-Wpp |  TOFU | ADV INTERESES DIRECTOS","spend":20694,"results":4,"reach":4778,"cpr":3830,"ctr":0.24,"conv":38.9,"status":"underperform"},{"name":"💥 F3 ⏫ | CBO | VTA-Wpp |  TOFU | ADV LOOKA | TULUA","spend":16002,"results":3,"reach":2229,"cpr":1650,"ctr":0.59,"conv":83.3,"status":"scaling"},{"name":"🟢 F2 (2) | CBO | VTA-Wpp | TOFU | ADV LOOKA | TULUA","spend":15421,"results":3,"reach":3663,"cpr":1542,"ctr":1.5,"conv":36.7,"status":"active"},{"name":"❌ F2 | CBO | VTA-Wpp |  MOFU | ADV CUSTOM","spend":4115,"results":1,"reach":267,"cpr":1497,"ctr":1.81,"conv":33.3,"status":"paused"},{"name":"🔥 F2 (2)  | CBO | VTA-Wpp |  TOFU | ADV INTERESES DIRECTOS","spend":5065,"results":1,"reach":641,"cpr":4809,"ctr":0,"conv":0,"status":"testing"},{"name":"🟢 F2 (2) | CBO | VTA-Wpp |MOFU | ADV CUSTOM","spend":7034,"results":1,"reach":587,"cpr":0,"ctr":1.15,"conv":0,"status":"active"},{"name":"🔥 F2 (2)  | CBO | VTA-Wpp |  MOFU | ADV CUSTOM","spend":766,"results":1,"reach":84,"cpr":662,"ctr":1.11,"conv":100,"status":"testing"},{"name":"🔴 F3 ⏫ | CBO | VTA-Wpp |  MOFU | ADV CUSTOM","spend":13416,"results":1,"reach":1105,"cpr":888,"ctr":0.56,"conv":50,"status":"underperform"},{"name":"🟢F2-1 | CBO | VTA-Wpp |MOFU | ADV CUSTOM","spend":5904,"results":1,"reach":596,"cpr":0,"ctr":0.86,"conv":0,"status":"active"},{"name":"🔥 F2 (2)  | CBO | VTA-Wpp |  TOFU | ADV LOOKA | TULUA","spend":2480,"results":0,"reach":403,"cpr":0,"ctr":0,"conv":0,"status":"testing"}],
+  ads: [{"name":"VTA 0311","spend":379140,"results":84,"reach":60513,"cpr":4855,"ctr":0.45},{"name":"VTA 0615","spend":113692,"results":36,"reach":14340,"cpr":3033,"ctr":0.72},{"name":"VTA PtId 0615","spend":45566,"results":26,"reach":5356,"cpr":1829,"ctr":0.71},{"name":"VTA  0519","spend":80575,"results":23,"reach":16814,"cpr":2862,"ctr":1.0},{"name":"VTA PtId 0328","spend":68375,"results":17,"reach":12787,"cpr":2259,"ctr":0.6},{"name":"VTA 0330","spend":87955,"results":12,"reach":8360,"cpr":3475,"ctr":0.69},{"name":"VTA  0427","spend":33376,"results":9,"reach":5600,"cpr":2021,"ctr":2.42},{"name":"VTA PtId 0619","spend":7286,"results":5,"reach":716,"cpr":848,"ctr":2.55},{"name":"VTA 0420","spend":11046,"results":2,"reach":1192,"cpr":927,"ctr":1.8},{"name":"VTA 0216","spend":7284,"results":1,"reach":611,"cpr":1449,"ctr":1.25},{"name":"VTA 0612","spend":21373,"results":1,"reach":2203,"cpr":7575,"ctr":1.02},{"name":"VTA 0501","spend":79,"results":0,"reach":18,"cpr":0,"ctr":0},{"name":"VTA PtId 0606","spend":2232,"results":0,"reach":322,"cpr":0,"ctr":0},{"name":"❌VTA 0612","spend":875,"results":0,"reach":92,"cpr":0,"ctr":0},{"name":"VTA 0617","spend":1713,"results":0,"reach":268,"cpr":0,"ctr":3.04},{"name":"VTA  0324","spend":3907,"results":0,"reach":497,"cpr":0,"ctr":5.01}]
+};
+
+// ──────────── TABS ────────────
+function switchTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+  if (id === 'overview' && !window._chartsBuilt) buildCharts();
+  if (id === 'creatives' && !window._adsChartBuilt) buildAdsChart();
+}
+
+// ──────────── HELPERS ────────────
+function fmt(n) { return n ? '$' + n.toLocaleString('es-CO') : '—'; }
+function fmtK(n) { return n >= 1000 ? '$' + (n/1000).toFixed(0) + 'K' : '$' + n; }
+function cprClass(v) { if (!v) return ''; if (v < 2000) return 'cpr-good'; if (v < 4000) return 'cpr-mid'; return 'cpr-bad'; }
+function statusBadge(s) {
+  const map = { active:'badge-active', paused:'badge-paused', scaling:'badge-scaling', underperform:'badge-underperform', testing:'badge-testing' };
+  const label = { active:'🟢 Activo', paused:'❌ Pausado', scaling:'💥 Escalando', underperform:'🔴 Bajo rend.', testing:'🔥 Test' };
+  return `<span class="badge ${map[s]||''}">${label[s]||s}</span>`;
+}
+function scoreLabel(cpr, results) {
+  if (!results) return ['D','score-d'];
+  if (cpr < 2000 && results >= 5) return ['A','score-a'];
+  if (cpr < 3000) return ['B','score-b'];
+  if (cpr < 5000) return ['C','score-c'];
+  return ['D','score-d'];
+}
+
+// ──────────── ADSET TABLE ────────────
+function renderAdsets(filter) {
+  const tbody = document.getElementById('adsetBody');
+  const maxRes = Math.max(...DATA.adsets.map(a => a.results));
+  const rows = DATA.adsets.filter(a => filter === 'all' || a.status === filter);
+  tbody.innerHTML = rows.map(a => {
+    const pct = maxRes ? Math.round(a.results / maxRes * 100) : 0;
+    const color = a.status === 'scaling' ? '#f59e0b' : a.status === 'active' ? '#4f46e5' : '#9ca3af';
+    const shortName = a.name.replace(/^[^\s]+\s/, '').replace(/\| CBO \| VTA-Wpp \|/, '|').trim();
+    return `<tr data-status="${a.status}">
+      <td>${statusBadge(a.status)}</td>
+      <td><div class="adset-name" title="${a.name}">${shortName}</div></td>
+      <td class="num">${fmtK(a.spend)}</td>
+      <td class="num"><strong>${a.results}</strong></td>
+      <td class="num">${(a.reach/1000).toFixed(1)}K</td>
+      <td class="num ${cprClass(a.cpr)}">${a.cpr ? fmtK(a.cpr) : '—'}</td>
+      <td class="num">${a.ctr ? a.ctr.toFixed(2)+'%' : '—'}</td>
+      <td class="num">${a.conv ? a.conv+'%' : '—'}</td>
+      <td style="min-width:80px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:2px">${pct}%</div>
+        <div class="bar-mini"><div class="bar-mini-fill" style="width:${pct}%;background:${color}"></div></div>
+      </td>
+    </tr>`;
+  }).join('');
+  // Totals row
+  const tSpend = rows.reduce((s,a)=>s+a.spend,0);
+  const tRes   = rows.reduce((s,a)=>s+a.results,0);
+  const tReach = rows.reduce((s,a)=>s+a.reach,0);
+  const totalAll = DATA.adsets.length;
+  const label = filter === 'all'
+    ? `<span class="total-label">Total: ${totalAll} conjuntos testeados</span>`
+    : `<span class="total-label">${rows.length} de ${totalAll} conjuntos</span>`;
+  document.getElementById('adsetFoot').innerHTML = `<tr>
+    <td>—</td>
+    <td>${label}</td>
+    <td class="num">$${tSpend.toLocaleString('es-CO')}</td>
+    <td class="num">${tRes}</td>
+    <td class="num">${(tReach/1000).toFixed(1)}K</td>
+    <td class="num">—</td><td class="num">—</td><td class="num">—</td><td>—</td>
+  </tr>`;
+}
+renderAdsets('all');
+
+function filterAdsets(f, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderAdsets(f);
+}
+
+// ──────────── ADS TABLE ────────────
+(function() {
+  const AD_LINKS = {
+    'VTA 0615':  'https://www.facebook.com/61590503004022/posts/122112614265350100/',
+    'VTA 0311':  'https://www.facebook.com/61590503004022/posts/1604103780659950/',
+    'VTA  0519': 'https://www.facebook.com/61590503004022/posts/122116614093350100/'
+  };
+  const tbody = document.getElementById('adsBody');
+  const maxRes = Math.max(...DATA.ads.map(a => a.results));
+  tbody.innerHTML = DATA.ads.map((a, i) => {
+    const [score, cls] = scoreLabel(a.cpr, a.results);
+    const pct = maxRes ? Math.round(a.results / maxRes * 100) : 0;
+    return `<tr>
+      <td><div class="score-ring ${cls}">${score}</div></td>
+      <td>
+        <strong>${a.name}</strong>
+        ${AD_LINKS[a.name] ? `<a href="${AD_LINKS[a.name]}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:3px;margin-left:6px;font-size:11px;font-weight:600;color:#4f46e5;text-decoration:none;background:#ede9fe;padding:2px 7px;border-radius:20px;white-space:nowrap;">🏆 Ver anuncio</a>` : ''}
+      </td>
+      <td class="num"><strong>${a.results}</strong></td>
+      <td class="num">${fmtK(a.spend)}</td>
+      <td class="num">${(a.reach/1000).toFixed(1)}K</td>
+      <td class="num ${cprClass(a.cpr)}">${a.cpr ? fmtK(a.cpr) : '—'}</td>
+      <td class="num">${a.ctr ? a.ctr.toFixed(2)+'%' : '—'}</td>
+      <td style="min-width:100px">
+        <div class="bar-mini"><div class="bar-mini-fill" style="width:${pct}%;background:#4f46e5"></div></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${a.results} conv.</div>
+      </td>
+    </tr>`;
+  }).join('');
+  // Totals row
+  const tRes   = DATA.ads.reduce((s,a)=>s+a.results,0);
+  const tSpend = DATA.ads.reduce((s,a)=>s+a.spend,0);
+  const tReach = DATA.ads.reduce((s,a)=>s+a.reach,0);
+  document.getElementById('adsFoot').innerHTML = `<tr>
+    <td>—</td>
+    <td><span class="total-label">Total: ${DATA.ads.length} creativos testeados</span></td>
+    <td class="num">${tRes}</td>
+    <td class="num">$${tSpend.toLocaleString('es-CO')}</td>
+    <td class="num">${(tReach/1000).toFixed(1)}K</td>
+    <td class="num">—</td><td class="num">—</td><td>—</td>
+  </tr>`;
+})();
+
+// ──────────── ALERTS ────────────
+(function() {
+  function card(icon, title, subtitle, body, analogy, action, type) {
+    return `<div class="diag-card diag-${type}">
+      <div class="diag-card-header">
+        <div class="diag-card-icon">${icon}</div>
+        <div><div class="diag-card-title">${title}</div><div class="diag-card-subtitle">${subtitle}</div></div>
+      </div>
+      <div class="diag-card-body">${body}${analogy ? '<div class="diag-analogy">'+analogy+'</div>' : ''}${action ? '<div class="diag-action">'+action+'</div>' : ''}</div>
+    </div>`;
+  }
+
+  // ── ALERTAS CRÍTICAS ──
+  document.getElementById('alertsCritical').innerHTML = [
+
+    card('🔴','Dos días en los que se gastó mucho y llegaron muy pocas personas','2 de junio y 14 de junio',
+      `<p>En esos dos días, el costo de conseguir que alguien escribiera al WhatsApp superó los <strong>$7.900 por persona</strong>, cuando el promedio del mes fue de $3.200. Es decir, pagamos más del doble de lo normal por cada contacto.</p>
+       <p>Esto puede pasar cuando el anuncio que estaba activo ese día no conectó bien con la audiencia, o cuando Meta decidió mostrárselo a personas menos interesadas en el producto.</p>`,
+      'Es como si mandáramos a repartir volantes, pero el repartidor los dejara en un barrio donde casi nadie conoce la marca. El gasto es igual, pero el resultado es mucho menor.',
+      'Revisar qué anuncio estaba activo esos días y compararlo con los días en que los resultados fueron mejores.',
+      'warn'),
+
+    card('🔴','Un día se invirtió dinero y no llegó ningún mensaje','15 de junio: $21.000 COP gastados, 0 conversaciones',
+      `<p>El 15 de junio los anuncios estuvieron activos y Meta cobró el presupuesto del día, pero <strong>ninguna persona escribió al WhatsApp</strong>. Esto es inusual y vale la pena investigarlo.</p>
+       <p>Puede deberse a un problema temporal con la configuración del anuncio, a que ese día se cambió algo en la campaña sin darse cuenta, o a una situación puntual con la plataforma.</p>`,
+      'Sería como abrir la tienda todo el día, pagar los servicios, pero que nadie entrara porque la puerta quedó trabada sin que nadie lo notara.',
+      'Verificar si ese día hubo algún cambio en las campañas o si Meta reportó alguna interrupción del servicio.',
+      'warn'),
+
+    card('⚠️','Hay grupos de anuncios pausados que en su momento gastaron más de lo que rindieron','4 grupos con ❌ acumularon $157.270 COP con bajo retorno',
+      `<p>Cuatro grupos de anuncios que ya están pausados (es decir, ya no están activos) gastaron en total más de <strong>$157.000 COP</strong> con resultados muy por debajo del promedio. Lo positivo es que ya no están corriendo.</p>
+       <p>El aprendizaje es claro: esas audiencias o formatos no funcionaron para PRAISE Sublimación. Conocer esto ayuda a no repetir el mismo error en el futuro.</p>`,
+      'Es como haber probado un producto nuevo en la vitrina que no se vendió bien. Ya se retiró, pero sirve saber por qué no funcionó para no volver a pedirlo.',
+      'Documentar qué característica tenían esos grupos (a quién apuntaban) para no replicarlos en futuras campañas.',
+      'warn'),
+
+  ].join('');
+
+  // ── OPORTUNIDADES ──
+  document.getElementById('alertsOpp').innerHTML = [
+
+    card('💥','Un grupo de anuncios está consiguiendo clientes a la mitad del costo','F3 Intereses Directos: solo $1.348 por conversación',
+      `<p>Mientras el promedio del mes fue de $3.200 por cada persona que escribió al WhatsApp, este grupo de anuncios lo está logrando por solo <strong>$1.348</strong>. Es el más eficiente de todo el período.</p>
+       <p>Hasta ahora solo se le ha dado un presupuesto pequeño ($23.000 COP) y ya trajo 17 conversaciones. Si se le asigna más dinero, es probable que siga rindiendo bien.</p>`,
+      'Es como descubrir que un vendedor nuevo está cerrando el doble de ventas que los demás con el mismo esfuerzo. Lo lógico es darle más espacio y herramientas.',
+      'Aumentar gradualmente el presupuesto de este grupo y monitorear si el rendimiento se mantiene.',
+      'opp'),
+
+    card('🌟','Una imagen o video está funcionando excepcionalmente bien','VTA PtId 0619: el creativo más eficiente del mes',
+      `<p>Este anuncio consiguió 5 conversaciones gastando apenas <strong>$7.286 COP en total</strong>, lo que da un costo por contacto de $848 — el más bajo de todos los creativos probados. Además, el porcentaje de personas que hacen clic en el anuncio después de verlo es muy alto (2.55%).</p>
+       <p>Eso significa que la imagen o el mensaje de ese anuncio conecta muy bien con la audiencia: la gente lo ve y siente curiosidad o interés de inmediato.</p>`,
+      'En una tienda física, sería el aviso o la vitrina que hace que la gente se detenga a mirar. Cuando uno funciona así, conviene replicarlo con variaciones.',
+      'Usar este anuncio como base para crear versiones nuevas (distintos colores, textos o formatos) y probarlo en más grupos de audiencia.',
+      'opp'),
+
+    card('📈','Una audiencia específica responde muy bien a los anuncios','Grupo "Intereses Indirectos nuevos": 3.38% de personas que hacen clic',
+      `<p>Cuando un anuncio se muestra a 100 personas y más de 3 hacen clic, eso es una muy buena señal. Este grupo está por encima del doble del promedio general del mes (1.15%).</p>
+       <p>Esto indica que el tipo de personas a las que se les está mostrando el anuncio en este grupo es el perfil correcto de cliente para PRAISE.</p>`,
+      'Es como descubrir que al repartir volantes en cierto barrio, la respuesta es mucho mayor que en otros. Conviene concentrar el esfuerzo en ese barrio.',
+      'Darle más presupuesto a este grupo y explorar audiencias similares para ampliar el alcance entre personas con el mismo perfil.',
+      'opp'),
+
+  ].join('');
+
+  // ── LO QUE FUNCIONA ──
+  document.getElementById('alertsGood').innerHTML = [
+
+    card('✅','El costo de conseguir clientes está mejorando semana a semana','Última semana de junio: reducción significativa del costo por contacto',
+      `<p>Al inicio del mes (principios de junio), conseguir que alguien escribiera al WhatsApp costaba cerca de <strong>$5.600 por persona</strong>. En la última semana del mes, ese costo bajó a <strong>$1.672</strong>. Una mejora del 70%.</p>
+       <p>Esto muestra que las decisiones tomadas durante el mes — pausar anuncios que no funcionaban, probar nuevos — están teniendo efecto positivo.</p>`,
+      'Es como afinar una receta: al principio queda bien, pero con ajustes pequeños termina quedando mucho mejor. La tendencia indica que vamos por buen camino.',
+      null, 'good'),
+
+    card('✅','Un grupo logró que más personas escribieran de las que hicieron clic','F3 MOFU Custom: tasa de conversión superior al 100%',
+      `<p>Normalmente, si 10 personas hacen clic en un anuncio, se espera que algunas pocas escriban al WhatsApp. Pero este grupo logró que <strong>más personas escribieran de las que hicieron clic</strong>.</p>
+       <p>¿Cómo es posible? Porque Meta también puede mostrar el botón de WhatsApp directamente en el anuncio, sin necesidad de que la persona haga clic primero. Eso significa que el mensaje del anuncio fue tan claro y atractivo que la gente actuó de inmediato.</p>`,
+      'Es como poner un afiche con el número de teléfono bien visible: algunas personas llaman directamente sin haber entrado a la tienda antes.',
+      null, 'good'),
+
+    card('✅','216 personas se comunicaron por WhatsApp en menos de un mes','Volumen sólido de contactos para el presupuesto invertido',
+      `<p>Durante los 27 días analizados, <strong>216 personas iniciaron una conversación</strong> con la marca por WhatsApp. Con un presupuesto total de $864.474 COP, eso equivale a pagar aproximadamente $4.000 por cada persona interesada.</p>
+       <p>Este es un buen punto de partida. Con los ajustes recomendados, ese costo puede reducirse aún más en los próximos meses.</p>`,
+      null,
+      null, 'good'),
+
+  ].join('');
+
+  // ── ACCIONES RECOMENDADAS ──
+  document.getElementById('alertsRec').innerHTML = [
+
+    card('1️⃣','Mover el dinero de los anuncios que no funcionan a los que sí lo hacen','Prioridad alta · Impacto inmediato en resultados',
+      `<p>Hay grupos de anuncios que están pausados y que en su momento no rindieron bien. El dinero que se destinaba a ellos puede redirigirse a los grupos 💥 que ya están demostrando resultados con menor costo.</p>
+       <p>No se trata de gastar más, sino de gastar mejor: concentrar el presupuesto donde la inversión rinde el doble.</p>`,
+      'Es como una tienda que tiene varios vendedores: si uno vende el triple que los demás, lo lógico es asignarle más clientes a él, no seguir repartiendo igual.',
+      'Hablar con el equipo de pauta para reasignar el presupuesto hacia los grupos con mejor desempeño de la última semana.',
+      'rec'),
+
+    card('2️⃣','Crear versiones nuevas de los anuncios que mejor funcionaron','Prioridad media · Previene que los anuncios "se desgasten"',
+      `<p>Los anuncios VTA PtId 0619 y VTA 0427 son los más eficientes del mes. Pero cuando una misma imagen o video se le muestra muchas veces a la misma persona, esta empieza a ignorarla.</p>
+       <p>La solución es crear variaciones del mismo concepto: mismo mensaje, pero con imágenes diferentes, textos distintos o un formato nuevo (por ejemplo, pasar de imagen fija a video corto).</p>`,
+      'Es como cambiar la vitrina de la tienda regularmente: el producto es el mismo, pero la presentación fresca llama la atención de quienes ya la habían visto.',
+      'Solicitar al equipo creativo variantes de estos dos anuncios para tenerlas listas antes de que el rendimiento actual empiece a bajar.',
+      'rec'),
+
+    card('3️⃣','Conectar la cuenta de Meta directamente para tener los datos al instante','Prioridad baja · Comodidad y ahorro de tiempo',
+      `<p>Hoy los datos de este panel se actualizan cuando alguien sube manualmente el archivo Excel. Si se hace la conexión directa con la cuenta de Meta (Facebook/Instagram Ads), el panel se actualizará solo cada día, sin necesitar exportar ni subir archivos.</p>
+       <p>Esto ahorra tiempo y permite reaccionar más rápido cuando algo no está funcionando.</p>`,
+      'Es como pasar de revisar el saldo bancario en el extracto físico que llega por correo, a tenerlo en la app del celular: la información es la misma, pero siempre disponible y al día.',
+      'Solicitar al equipo técnico la activación del conector de Meta Ads en la configuración del panel.',
+      'rec'),
+
+  ].join('');
+})();
+
+// ──────────── CHARTS ────────────
+window._chartsBuilt = false;
+window._adsChartBuilt = false;
+
+function buildCharts() {
+  window._chartsBuilt = true;
+  const labels = DATA.daily.map(d => d.date.slice(5)); // MM-DD
+  const spends = DATA.daily.map(d => d.spend);
+  const results = DATA.daily.map(d => d.results);
+  const cprs = DATA.daily.map(d => d.cpr);
+  const ctrs = DATA.daily.map(d => d.ctr);
+
+  // Daily spend + results
+  new Chart(document.getElementById('chartDaily'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { type: 'bar', label: 'Gasto COP', data: spends, backgroundColor: 'rgba(79,70,229,0.25)', borderColor: 'rgba(79,70,229,0.8)', borderWidth: 1.5, borderRadius: 4, yAxisID: 'y' },
+        { type: 'line', label: 'Conversaciones', data: results, borderColor: '#0ea5e9', backgroundColor: 'rgba(14,165,233,0.15)', borderWidth: 2.5, pointRadius: 3, pointBackgroundColor: '#0ea5e9', tension: 0.35, fill: true, yAxisID: 'y2' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { font: { size: 11 }, boxWidth: 12 } }, tooltip: { mode: 'index', intersect: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, maxTicksLimit: 14 } },
+        y: { position: 'left', grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 }, callback: v => '$'+(v/1000).toFixed(0)+'K' } },
+        y2: { position: 'right', grid: { display: false }, ticks: { font: { size: 10 }, stepSize: 2 } }
+      }
+    }
+  });
+
+  // Status donut
+  const statusCount = {};
+  DATA.adsets.forEach(a => { statusCount[a.status] = (statusCount[a.status]||0) + 1; });
+  const statusLabels = { active:'🟢 Activos', paused:'❌ Pausados', scaling:'💥 Escalando', underperform:'🔴 Bajo rend.', testing:'🔥 Testing' };
+  const statusColors = { active:'#16a34a', paused:'#dc2626', scaling:'#f59e0b', underperform:'#db2777', testing:'#7c3aed' };
+    new Chart(document.getElementById('chartStatus'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(statusCount).map(k => statusLabels[k]||k),
+      datasets: [{ data: Object.values(statusCount), backgroundColor: Object.keys(statusCount).map(k => statusColors[k]||'#9ca3af'), borderWidth: 2, borderColor: '#fff' }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12, padding: 12 } } },
+      cutout: '62%'
+    }
+  });
+
+  // CPR line
+  new Chart(document.getElementById('chartCPR'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'CPR (COP)',
+        data: cprs,
+        borderColor: '#ea580c',
+        backgroundColor: 'rgba(234,88,12,0.1)',
+        borderWidth: 2, pointRadius: 3, tension: 0.3, fill: true
+      }, {
+        label: 'Meta $3.000',
+        data: labels.map(() => 3000),
+        borderColor: '#16a34a', borderDash: [5,4], borderWidth: 1.5, pointRadius: 0
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { font: { size: 11 }, boxWidth: 12 } }, tooltip: { callbacks: { label: ctx => '$'+ctx.parsed.y.toLocaleString('es-CO') } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, maxTicksLimit: 10 } },
+        y: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 }, callback: v => '$'+(v/1000).toFixed(0)+'K' } }
+      }
+    }
+  });
+
+  // CTR line
+  new Chart(document.getElementById('chartCTR'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'CTR %',
+        data: ctrs,
+        borderColor: '#7c3aed',
+        backgroundColor: 'rgba(124,58,237,0.1)',
+        borderWidth: 2, pointRadius: 3, tension: 0.35, fill: true
+      }, {
+        label: 'Referencia 1%',
+        data: labels.map(() => 1),
+        borderColor: '#16a34a', borderDash: [5,4], borderWidth: 1.5, pointRadius: 0
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { font: { size: 11 }, boxWidth: 12 } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, maxTicksLimit: 10 } },
+        y: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 }, callback: v => v+'%' } }
+      }
+    }
+  });
+}
+
+function buildAdsChart() {
+  window._adsChartBuilt = true;
+  const top = DATA.ads.filter(a => a.results > 0).slice(0, 8);
+  new Chart(document.getElementById('chartAds'), {
+    type: 'bar',
+    data: {
+      labels: top.map(a => a.name),
+      datasets: [
+        { label: 'Resultados', data: top.map(a => a.results), backgroundColor: '#4f46e5', borderRadius: 6 },
+        { label: 'CPR (÷100)', data: top.map(a => Math.round(a.cpr/100)), backgroundColor: '#f59e0b', borderRadius: 6 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { font: { size: 11 }, boxWidth: 12 } }, tooltip: { callbacks: {
+        label: ctx => ctx.datasetIndex === 0 ? ctx.parsed.y + ' conv.' : '$' + (ctx.parsed.y * 100).toLocaleString() + ' CPR'
+      }}},
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+// Build overview charts on load
+setTimeout(buildCharts, 100);
+</script>
+</body>
+</html>                                                                                                                                                                                                                                                                                                                                                
